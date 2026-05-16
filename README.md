@@ -4,7 +4,7 @@
 
 A high-performance, aesthetically pleasing X11 screen locker written in Rust. This is a learning project exploring X11 screen locking mechanisms. While functional, this is **NOT recommended for security-critical environments**. For production use, consider mature alternatives like `i3lock`, `xsecurelock`, or `swaylock`.
 
-Arctic Lock is designed to be lightweight, secure, and visually polished. It renders a synchronized lock screen across all connected monitors, supports custom backgrounds, and features the "Arctic Abyssal" coding theme.
+Arctic Lock renders a synchronized lock screen across all connected monitors, supports custom backgrounds, Catppuccin themes, and shows random dev humor on failed login attempts.
 
 ---
 
@@ -21,8 +21,6 @@ Arctic Lock is designed to be lightweight, secure, and visually polished. It ren
 
 ### Known Limitations
 
-Please be aware of the following security considerations:
-
 - ⚠️ Password stored in plain String (not cleared from memory)
 - ⚠️ If input grab fails, program continues running (may appear locked when it's not)
 - ⚠️ No rate limiting on authentication attempts
@@ -30,11 +28,9 @@ Please be aware of the following security considerations:
 - ⚠️ PAM initialization errors will panic (could unlock screen)
 - ⚠️ No privilege dropping after initialization
 
-**Recommendation**: For production use or security-critical environments, use the mature alternatives listed above.
+**Recommendation**: For production use or security-critical environments, use the mature alternatives listed below.
 
 ### Mature Alternatives
-
-For production use, consider these battle-tested alternatives:
 
 - **i3lock** - Minimal, proven screen locker
 - **xsecurelock** - Extensive security features
@@ -43,31 +39,41 @@ For production use, consider these battle-tested alternatives:
 
 ### Reporting Security Issues
 
-If you discover a security vulnerability, please report it privately to [your-email@example.com] before public disclosure. Please do not open public GitHub issues for security problems.
+If you discover a security vulnerability, please report it privately before public disclosure. Do not open public GitHub issues for security problems.
 
 ---
 
 ## ✨ Features
 
-- **Multi-Monitor Support**: Automatically detects all connected screens and renders the lock UI centered on each one independently.
-- **Security Features**:
+- **Multi-Monitor Support**: Automatically detects all connected screens via RandR and renders the lock UI centered on each one.
+- **Catppuccin Themes**: Four flavors — Mocha, Macchiato, Frappé, Latte — selectable at launch via `--theme`.
+- **Security**:
   - Bypasses window managers using `override_redirect`
-  - Input grabbing to prevent window switching
-  - Uses system PAM (Pluggable Authentication Modules) for authentication
-- **Aesthetics**:
-  - **Arctic Abyssal Theme**: Deep blue/teal color palette optimized for developers
-  - **Animations**: Shake-on-error and blinking cursor
-  - **Typography**: Clean rendering using any TTF font
-  - **Custom Wallpaper**: Loads and scales your preferred background image
-- **Dev-Friendly**:
-  - Displays active user and current time/date
-  - Shows random "dev excuses" (funny coding phrases) upon failed login attempts
+  - Keyboard and pointer grab to prevent window switching
+  - PAM authentication (Pluggable Authentication Modules)
+- **Animations**: Shake-on-error and blinking cursor.
+- **Typography**: Clean TTF rendering via `rusttype`.
+- **Custom Wallpaper**: Loads and scales any image to fit the screen.
+- **Dev Humor**: 44 random phrases shown on failed login attempts.
+
+---
+
+## 🎨 Themes
+
+Arctic Lock ships with all four [Catppuccin](https://github.com/catppuccin/catppuccin) flavors:
+
+| Name | Style | `--theme` value |
+|------|-------|-----------------|
+| Mocha | Dark (darkest) | `mocha` |
+| Macchiato | Dark | `macchiato` |
+| Frappé | Dark (medium) | `frappe` |
+| Latte | Light | `latte` |
+
+The default theme is **Mocha**. Pass `--theme <name>` anywhere in the argument list to change it.
 
 ---
 
 ## 🛠️ Prerequisites
-
-To build Arctic Lock, you need the Rust toolchain and the development headers for X11 and PAM.
 
 ### Debian / Ubuntu
 
@@ -95,21 +101,13 @@ sudo dnf install cargo pam-devel libX11-devel libXrandr-devel
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/arctic-lock.git
-cd arctic-lock
+git clone https://github.com/GorbunovAlex/arctic-lock-screen.git
+cd arctic-lock-screen
 ```
 
 ### 2. Review the source code
 
-**IMPORTANT**: Before building and installing any SUID binary, you should review the source code to ensure you understand what it does and trust it.
-
-```bash
-# Review the main source file
-cat src/main.rs
-
-# Check dependencies
-cat Cargo.toml
-```
+**IMPORTANT**: Before building and installing any SUID binary, review the source code to ensure you understand and trust it.
 
 ### 3. Build the release binary
 
@@ -119,16 +117,11 @@ cargo build --release
 
 ### 4. Install system-wide
 
-> **⚠️ CRITICAL SECURITY WARNING**: Arctic Lock requires root ownership and the setuid bit to access `/etc/shadow` for password verification. This means any security vulnerability in the code could be exploited for privilege escalation. Only proceed if you understand and accept this risk.
+> **⚠️ CRITICAL SECURITY WARNING**: Arctic Lock requires root ownership and the setuid bit to access PAM. This means any vulnerability in the code could be exploited for privilege escalation. Only proceed if you understand and accept this risk.
 
 ```bash
-# Move binary to local bin
 sudo mv target/release/arctic-lock /usr/local/bin/
-
-# Set ownership to root
 sudo chown root:root /usr/local/bin/arctic-lock
-
-# Set SUID permissions (Essential but risky - see warning above)
 sudo chmod 4755 /usr/local/bin/arctic-lock
 ```
 
@@ -136,93 +129,114 @@ sudo chmod 4755 /usr/local/bin/arctic-lock
 
 ```bash
 ls -l /usr/local/bin/arctic-lock
+# Should show: -rwsr-xr-x 1 root root ...
 ```
-
-Output should look like: `-rwsr-xr-x 1 root root ...` (note the `s` in permissions)
 
 ---
 
 ## 🚀 Usage
 
-You must provide a path to a TrueType Font (`.ttf`) file. Optionally, you can provide a background image.
-
-### Syntax
-
-```bash
-arctic-lock <path_to_font.ttf> [path_to_background.png]
+```
+arctic-lock <font.ttf> [background.png] [--theme mocha|macchiato|frappe|latte]
 ```
 
 ### Examples
 
 ```bash
-# Minimal (solid background)
+# Default theme (Mocha), no background
 arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
 
-# With Custom Wallpaper
-arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf ~/Pictures/wallpapers/ocean.png
+# With a background image
+arctic-lock /usr/share/fonts/truetype/hack/Hack-Regular.ttf ~/Pictures/wallpaper.png
 
-# Using Hack font
-arctic-lock /usr/share/fonts/truetype/hack/Hack-Regular.ttf ~/wallpaper.jpg
+# Latte (light) theme
+arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf --theme latte
+
+# Macchiato theme with a background
+arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf ~/Pictures/wallpaper.png --theme macchiato
+
+# --theme can appear anywhere in the argument list
+arctic-lock --theme frappe /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
 ```
 
-### Tips
+### Finding fonts
 
-- **Keyboard Shortcut**: Bind the command above to `Super+L` or `Ctrl+Alt+L` in your window manager config:
+```bash
+fc-list | grep -i "dejavu\|hack\|liberation"
+```
 
-  **i3 Config Example:**
+Common font paths:
+- `/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf`
+- `/usr/share/fonts/truetype/hack/Hack-Regular.ttf`
+- `/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf`
 
-  ```
-  bindsym $mod+l exec --no-startup-id /usr/local/bin/arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
-  ```
+### Binding to a keyboard shortcut
 
-  **bspwm Config Example:**
+**i3 / i3-gaps:**
 
-  ```
-  super + l
-      /usr/local/bin/arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
-  ```
+```
+bindsym $mod+l exec --no-startup-id arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf --theme mocha
+```
 
-- **Font Locations**: Most Linux distributions store fonts in `/usr/share/fonts`. Good choices include:
-  - DejaVu: `/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf`
-  - Hack: `/usr/share/fonts/truetype/hack/Hack-Regular.ttf`
-  - Liberation: `/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf`
+**bspwm:**
 
-- **Find Fonts**: Use `fc-list` to find available fonts:
-
-  ```bash
-  fc-list | grep -i "dejavu\|hack\|liberation"
-  ```
+```
+super + l
+    arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf --theme mocha
+```
 
 ---
 
 ## ⌨️ Controls
 
-- **Type Password**: Input your login password
-- **Enter**: Submit password for authentication
-- **Backspace**: Delete last character
-- **Escape**: Clear the entire password field
+| Key | Action |
+|-----|--------|
+| Type | Append to password |
+| `Enter` | Submit password |
+| `Backspace` | Delete last character |
+| `Escape` | Clear the entire field |
+
+---
+
+## 🏗️ Architecture
+
+The project is split into focused modules:
+
+```
+src/
+  main.rs       — argument parsing, entry point
+  app.rs        — ArcticLock struct: event loop, render dispatch, key handling
+  display.rs    — X11 connection, window creation, monitor detection (RandR), input grab
+  renderer.rs   — pixel buffer, draw_rect / draw_text / measure_text / present
+  auth.rs       — PAM authentication
+  input.rs      — keycode → char mapping
+  theme.rs      — Theme struct with all four Catppuccin flavors + phrase list
+```
+
+**Rendering pipeline:**
+1. `clear()` — fill buffer with base color or blit background image
+2. `draw_*()` — software-rendered text and rects with alpha blending
+3. `present()` — chunked `XPutImage` to the X server (avoids request size limits on 4K+)
+
+**Authentication flow:**
+1. Enter key → show "Authenticating..." → render frame → PAM call (blocking)
+2. Success → `exit(0)`
+3. Failure → clear password, set error state, pick random phrase, trigger shake animation
 
 ---
 
 ## 🔧 Troubleshooting
 
-### "MaximumRequestLengthExceeded" panic
+### "Authentication Failed" with correct password
 
-**Solution**: The current version includes chunked image rendering to prevent this X11 error. If you still encounter display issues on 4K+ screens, ensure you are using the latest version of the code.
-
-### "Authentication Failed" (even with correct password)
-
-**Cause**: Incorrect permissions on the binary.
-
-**Solution**: Double-check permissions:
+Permissions are wrong. Verify:
 
 ```bash
 ls -l /usr/local/bin/arctic-lock
+# Must show -rwsr-xr-x 1 root root ...
 ```
 
-Output must look like: `-rwsr-xr-x 1 root root ....`
-
-If the `s` is missing, run:
+If the `s` is missing:
 
 ```bash
 sudo chmod 4755 /usr/local/bin/arctic-lock
@@ -230,149 +244,24 @@ sudo chmod 4755 /usr/local/bin/arctic-lock
 
 ### "CRITICAL ERROR: Failed to grab inputs"
 
-**Cause**: Another application has grabbed the keyboard/pointer, or the window manager is preventing the grab.
+Another application holds a keyboard/pointer grab (games, VMs, screen recorders). Close it and try again. If the grab fails, the screen may appear locked but inputs are not captured — this is a security risk.
 
-**What it means**: The program continues running but may not have successfully grabbed input devices. **This is a security risk** - the screen may appear locked but inputs might not be captured.
+### Screen doesn't cover all monitors
 
-**Solutions**:
+RandR detection failed. Check with `xrandr --listmonitors` and ensure all monitors are active.
 
-- Close applications that might grab input (games, VMs, screen recorders)
-- If using a compositor, try disabling it temporarily
-- Check for other screen locking software running
+### PAM errors
 
-### Screen doesn't lock all monitors
-
-**Cause**: RandR monitor detection failed.
-
-**Solution**:
-
-1. Check monitor setup: `xrandr --listmonitors`
-2. Ensure all monitors are properly configured
-3. Try updating your graphics drivers
-
-### PAM authentication errors in logs
-
-**Cause**: PAM configuration issues.
-
-**Solution**: Check PAM configuration:
-
-```bash
-cat /etc/pam.d/login
-```
-
-Ensure the file exists and is properly configured for your system.
-
----
-
-## 🏗️ Building from Source
-
-### Dependencies in Cargo.toml
-
-```toml
-[dependencies]
-chrono = "0.4"
-image = "0.24"
-pam = "0.7"
-rand = "0.8"
-rusttype = "0.9"
-users = "0.11"
-x11rb = "0.13"
-```
-
-### Build Options
-
-```bash
-# Development build (with debug symbols)
-cargo build
-
-# Release build (optimized)
-cargo build --release
-
-# Run tests (if available)
-cargo test
-
-# Check code without building
-cargo check
-```
-
----
-
-## 🧪 Testing Recommendations
-
-Before relying on Arctic Lock, test it thoroughly:
-
-1. **Test with wrong password**: Verify it denies access
-2. **Test input grabbing**: Ensure you cannot switch to other windows (note: if grab fails, this may not work)
-3. **Test multi-monitor**: Verify all screens are covered
-4. **Test with background**: Try different image formats and sizes
-5. **Test edge cases**: Try very long passwords, special characters, etc.
-
-**Testing command** (use a throw-away terminal):
-
-```bash
-# This will lock your screen - have a backup way to unlock ready!
-arctic-lock /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
-```
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome, especially:
-
-- Security improvements and audits
-- Bug fixes
-- Documentation improvements
-- Testing on different systems
-
-### Guidelines
-
-1. **Security First**: All PRs involving security should be thoroughly reviewed
-2. **Test Thoroughly**: Ensure changes don't break existing functionality
-3. **Document Changes**: Update README and code comments
-4. **Follow Rust Best Practices**: Run `cargo clippy` and `cargo fmt`
-
-### Reporting Issues
-
-- **Security Issues**: Report privately (see Security Notice above)
-- **Bugs**: Open a GitHub issue with details about your system and the problem
-- **Feature Requests**: Open a GitHub issue with your proposal
-
----
-
-## 📚 How It Works
-
-### Architecture Overview
-
-1. **X11 Connection**: Establishes connection to X server
-2. **Monitor Detection**: Uses RandR extension to detect all monitors
-3. **Window Creation**: Creates fullscreen override-redirect window
-4. **Input Grabbing**: Grabs keyboard and pointer (CRITICAL for security)
-5. **PAM Authentication**: Uses system PAM for password verification
-6. **Rendering Loop**: 60 FPS rendering loop for animations
-7. **Security Layer**: Rate limiting, lockout, and secure memory handling
-
-### Security Model
-
-- **SUID Root**: Required for PAM access to `/etc/shadow`
-- **Input Isolation**: Attempts to grab all input to prevent interaction with other apps
-- **Memory Safety**: Rust's ownership system prevents many common bugs
-
-### Why Rust?
-
-- Memory safety without garbage collection
-- Strong type system prevents common bugs
-- Zero-cost abstractions for performance
-- Excellent X11 bindings via `x11rb`
+Check `/etc/pam.d/login` exists and is correctly configured for your distribution.
 
 ---
 
 ## 📋 System Requirements
 
-- **OS**: Linux with X11 (not Wayland)
+- **OS**: Linux with X11 (Wayland is not supported — use `swaylock`)
 - **Display Server**: X.Org
-- **PAM**: System must have PAM configured
-- **Rust**: 1.70.0 or newer (for building)
+- **PAM**: System PAM configured
+- **Rust**: 1.70.0 or newer
 
 ### Tested On
 
@@ -381,17 +270,15 @@ Contributions are welcome, especially:
 - Debian 12 (X11)
 - Fedora 38 (X11)
 
-**Note**: Does NOT work on Wayland. For Wayland, use `swaylock` instead.
-
 ---
 
 ## 🗺️ Roadmap
 
-### Planned Features
-
-- [ ] Wayland support (via wlroots)
+- [x] Multi-monitor support
+- [x] Custom background image
+- [x] Catppuccin theme support (Mocha, Macchiato, Frappé, Latte)
+- [x] Modular codebase
 - [ ] Configuration file support
-- [ ] Theming system
-- [ ] Plugin architecture
-- [ ] Screen blanking after timeout
+- [ ] Screen blanking after idle timeout
 - [ ] Privilege dropping after PAM initialization
+- [ ] Wayland support (via wlroots)
